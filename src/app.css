@@ -1,0 +1,104 @@
+/* Sunrise – Material 3 Expressive-ish styling. Colours come from CSS variables set by themes.js */
+:root {
+  --bg: #EEE9FB; --surface: #F8F5FF; --surface-high: #E6DFF6; --outline: #CBC3E3;
+  --primary: #6A52B3; --on-primary: #FFFFFF; --primary-container: #E8DDFF; --on-primary-container: #21005E;
+  --secondary-container: #E2DAF5; --on-secondary-container: #1D192B;
+  --tertiary: #7D5260; --tertiary-container: #FFD8E4; --on-tertiary-container: #31111D;
+  --text: #1D1A3A; --text-dim: #4A4565; --error: #BA1A1A; --scene-top: #4A3C8C; --scene-glow: #FFB36B;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  font-family: Inter, Roboto, 'Noto Sans', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font-size: 15px; overflow: hidden; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+::selection { background: color-mix(in srgb, var(--primary) 35%, transparent); }
+
+/* scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--outline) transparent; }
+
+/* ── buttons: squarish, small; they squish into a squarer shape when pressed ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 38px; padding: 0 16px; border-radius: 12px; font-weight: 600; white-space: nowrap;
+  background: var(--secondary-container); color: var(--on-secondary-container);
+  transition: border-radius .35s var(--spring), transform .25s var(--spring), filter .15s, opacity .15s;
+}
+.btn:hover { filter: brightness(.95); }
+.btn:active { border-radius: 5px; transform: scale(.97); }
+.btn:disabled { opacity: .45; pointer-events: none; }
+.btn.primary { background: var(--primary); color: var(--on-primary); }
+.btn.tonal { background: var(--tertiary-container); color: var(--on-tertiary-container); }
+.btn.danger { background: var(--error); color: var(--surface); }
+.btn.sm { height: 32px; padding: 0 12px; border-radius: 10px; font-size: 14px; }
+
+.icon-btn {
+  width: 36px; height: 36px; display: inline-grid; place-items: center; border-radius: 12px; flex: none;
+  color: var(--text-dim); transition: background .15s, border-radius .3s var(--spring);
+}
+.icon-btn:hover { background: var(--secondary-container); color: var(--on-secondary-container); }
+.icon-btn:active { border-radius: 6px; }
+
+/* ── inputs ── */
+.input, .select {
+  height: 38px; width: 100%; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--outline); background: var(--surface); color: var(--text);
+}
+.input:focus, .select:focus { outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent); border-color: var(--primary); }
+.select option { background: var(--surface); color: var(--text); }
+
+input[type='range'] { width: 100%; accent-color: var(--primary); }
+
+/* ── cards / chips ── */
+.card { background: var(--surface); border: 1px solid var(--outline); border-radius: 14px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 700; background: var(--primary-container); color: var(--on-primary-container);
+}
+.pill.tert { background: var(--tertiary-container); color: var(--on-tertiary-container); }
+.hint { color: var(--text-dim); font-size: 13px; line-height: 1.45; }
+.err { color: var(--error); font-size: 14px; line-height: 1.4; }
+
+/* ── connected button group ── */
+.seg { display: inline-flex; gap: 2px; }
+.seg button {
+  height: 34px; padding: 0 16px; font-weight: 600; font-size: 14px;
+  background: var(--secondary-container); color: var(--on-secondary-container);
+  border-radius: 4px; transition: border-radius .35s var(--spring), background .2s, color .2s;
+}
+.seg button:first-child { border-radius: 10px 4px 4px 10px; }
+.seg button:last-child { border-radius: 4px 10px 10px 4px; }
+.seg button.on { background: var(--primary); color: var(--on-primary); border-radius: 10px; }
+
+/* ── switch ── */
+.switch { position: relative; width: 44px; height: 26px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.switch span { position: absolute; inset: 0; border-radius: 13px; background: var(--surface-high); border: 1px solid var(--outline); transition: background .2s; }
+.switch span::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--text-dim); transition: transform .35s var(--spring), background .2s;
+}
+.switch input:checked + span { background: var(--primary); border-color: var(--primary); }
+.switch input:checked + span::after { transform: translateX(18px); background: var(--on-primary); }
+
+/* ── form rows ── */
+.field { display: grid; gap: 6px; margin-top: 14px; }
+.field > label, .label { font-size: 13px; font-weight: 700; color: var(--text-dim); }
+.row { display: flex; align-items: center; gap: 10px; }
+.foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+.spin {
+  width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor; animation: rot .8s linear infinite; display: inline-block; flex: none;
+}
+@keyframes rot { to { transform: rotate(360deg); } }
+
+.toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 99; max-width: min(640px, 92vw);
+  padding: 12px 18px; border-radius: 12px; background: var(--text); color: var(--bg); font-size: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .3); animation: toast .35s var(--spring);
+}
+@keyframes toast { from { transform: translate(-50%, 20px); opacity: 0; } }

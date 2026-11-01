@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <!-- blocky dawn sky -->
+  <rect width="16" height="6" fill="#384C78"/>
+  <rect y="6" width="16" height="3" fill="#D87863"/>
+  <rect y="9" width="16" height="2" fill="#F2A45D"/>
+  <!-- squared-off clouds -->
+  <path fill="#68759A" d="M2 3h3V2h2v1h2v2H6v1H3V5H2zm7 1h2V3h2v1h1v2h-3V5H9z"/>
+  <path fill="#E89570" d="M1 7h2V6h3v1h2v1H5v1H2V8H1zm9-1h3v1h2v2h-4V8h-1z"/>
+  <!-- square sun and stepped glow -->
+  <rect x="6" y="5" width="4" height="1" fill="#FFF0B0"/>
+  <rect x="5" y="6" width="6" height="1" fill="#FFE28A"/>
+  <rect x="5" y="7" width="6" height="2" fill="#FFD15F"/>
+  <rect x="6" y="9" width="4" height="1" fill="#FFBA51"/>
+  <!-- blocky mountain ridge -->
+  <path fill="#52604F" d="M0 10h3V9h1V8h1v1h1v1h2V9h1V8h1V7h1v2h1v1h2v5H0z"/>
+  <!-- dark green right-hand hillside -->
+  <path fill="#263D32" d="M11 10h2V9h1V8h1V7h1v9h-5z"/>
+  <path fill="#394B48" d="M0 12h3v-1h2v1h2v-1h2v-1h2v1h3v5H0z"/>
+  <path fill="#263D32" d="M10 12h2v-1h2v1h2v4h-6z"/>
+  <!-- voxel water and broken reflection -->
+  <rect y="14" width="16" height="1" fill="#294B63"/>
+  <rect y="15" width="16" height="1" fill="#233D56"/>
+  <rect x="6" y="12" width="4" height="1" fill="#F6B65E"/>
+  <rect x="7" y="13" width="2" height="1" fill="#FFD16B"/>
+  <rect x="5" y="14" width="6" height="1" fill="#EA9860"/>
+  <rect x="6" y="15" width="4" height="1" fill="#D77C5D"/>
+</svg>
