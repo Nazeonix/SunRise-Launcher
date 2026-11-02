@@ -89,6 +89,8 @@ pub fn run() {
             commands::open_folder,
             commands::open_url,
             commands::pick_folder,
+            commands::pick_image,
+            commands::pick_music_files,
             modpacks::search_modpacks,
             modpacks::modpack_versions,
             modpacks::install_modpack,

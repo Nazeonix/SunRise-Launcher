@@ -1013,6 +1013,7 @@ pub async fn install_modpack(
             ram_mb: 0,
             color: String::new(),
             banner_url,
+            icon_url: String::new(),
             dir_parent: String::new(),
         },
     )?;
@@ -1073,6 +1074,7 @@ pub async fn import_modpack_file(
             ram_mb: 0,
             color: String::new(),
             banner_url: String::new(),
+            icon_url: String::new(),
             dir_parent: String::new(),
         },
     )?;

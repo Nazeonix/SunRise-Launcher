@@ -2,12 +2,14 @@
   // Procedural pixel-art sunrise, coloured by the active theme.
   import { app } from './state.svelte.js';
   import { themeOf } from './themes.js';
+  import { convertFileSrc } from '@tauri-apps/api/core';
 
   let { title = '', subtitle = '', height = 200, imageUrl = '' } = $props();
   let canvas = $state();
   let width = $state(0);
   let imageFailed = $state(false);
   const showImage = $derived(Boolean(imageUrl) && !imageFailed);
+  const displayUrl = $derived(imageUrl ? (/^(https?:|data:|asset:)/i.test(imageUrl) ? imageUrl : convertFileSrc(imageUrl)) : '');
   const th = $derived(themeOf(app.settings?.theme, app.settings?.mode, app.systemDark));
 
   $effect(() => {
@@ -106,7 +108,7 @@
 
 <div class="banner" class:image={showImage} style:height="{height}px" bind:clientWidth={width}>
   {#if showImage}
-    <img class="screenshot" src={imageUrl} alt="" onerror={() => imageFailed = true} />
+    <img class="screenshot" src={displayUrl} alt="" onerror={() => imageFailed = true} />
   {:else}
     <canvas bind:this={canvas}></canvas>
   {/if}

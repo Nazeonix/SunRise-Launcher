@@ -9,6 +9,7 @@
   import AccountDialog from './lib/AccountDialog.svelte';
   import DeleteInstanceDialog from './lib/DeleteInstanceDialog.svelte';
   import ModpackBrowser from './lib/ModpackBrowser.svelte';
+  import MusicPlayer from './lib/MusicPlayer.svelte';
   import { clover } from './lib/shapes.js';
 
   const selected = $derived(app.instances.find((i) => i.id === app.selectedId));
@@ -43,6 +44,7 @@
   {#if app.dialog === 'account' || app.dialog === 'account-add'}<AccountDialog startAdding={app.dialog === 'account-add'} />{/if}
   {#if app.dialog === 'delete-instance'}<DeleteInstanceDialog id={app.deleteInstanceId} />{/if}
   {#if app.dialog === 'modpacks'}<ModpackBrowser />{/if}
+  {#if app.ready}<MusicPlayer />{/if}
   {#if app.toast}<div class="toast">{app.toast}</div>{/if}
 </div>
 

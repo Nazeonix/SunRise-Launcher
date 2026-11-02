@@ -6,6 +6,7 @@
   import Icon from './Icon.svelte';
   import InstanceForm from './InstanceForm.svelte';
   import { cookie } from './shapes.js';
+  import { convertFileSrc } from '@tauri-apps/api/core';
 
   let { instance } = $props();
 
@@ -147,7 +148,7 @@
 
 <div class="view">
   <header>
-    <div class="ico" style:background={instance.color} style:clip-path={cookie(8, 0.07)}>{instance.name.slice(0, 1).toUpperCase()}</div>
+    {#if instance.iconUrl}<img class="ico custom" src={/^(https?:|data:|asset:)/i.test(instance.iconUrl) ? instance.iconUrl : convertFileSrc(instance.iconUrl)} alt="" />{:else}<div class="ico" style:background={instance.color} style:clip-path={cookie(8, 0.07)}>{instance.name.slice(0, 1).toUpperCase()}</div>{/if}
     <div class="t">
       <h1>{instance.name}</h1>
       <p class="hint">Last played: {fmtDate(instance.lastPlayed)}</p>
@@ -214,13 +215,13 @@
     </div>
   {/if}
 
-  <nav class="tabs">
+  <div class="tabs" role="tablist" aria-label="Instance sections">
     {#each TABS as t (t.id)}
-      <button class="tab" class:on={tab === t.id} onclick={() => (tab = t.id)} aria-label={t.label}>
-        <Icon name={t.icon} size={20} /><span>{t.label}</span>
+      <button class="tab" class:on={tab === t.id} onclick={() => (tab = t.id)} role="tab" aria-selected={tab === t.id} aria-label={t.label}>
+        <span class="tab-icon"><Icon name={t.icon} size={19} /></span><span class="tab-label">{t.label}</span>
       </button>
     {/each}
-  </nav>
+  </div>
 
   <section>
     {#if tab === 'overview'}
@@ -367,7 +368,8 @@
 <style>
   .view { max-width: 860px; margin: 0 auto; display: grid; gap: 16px; }
   header { display: flex; align-items: center; gap: 14px; }
-  .ico { width: 52px; height: 52px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 22px; flex: none; }
+  .ico { width: 52px; height: 52px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 22px; flex: none; object-fit: cover; border-radius: 17px 13px 18px 13px; }
+  .ico.custom { object-fit: cover; }
   h1 { font-size: 28px; line-height: 1.1; }
 
   .actions { display: grid; grid-template-columns: 1.1fr 1.2fr .8fr; gap: 12px; }
@@ -388,16 +390,24 @@
   .dot { width: 10px; height: 10px; border-radius: 50%; background: #4CAF50; box-shadow: 0 0 0 4px color-mix(in srgb, #4CAF50 25%, transparent); }
   .errcard { padding: 12px 16px; display: flex; align-items: center; gap: 14px; justify-content: space-between; flex-wrap: wrap; }
 
-  /* floating toolbar: the selected tab springs open into a filled pill */
-  .tabs { justify-self: center; display: inline-flex; gap: 2px; padding: 6px; background: var(--secondary-container); border-radius: 16px; }
+  /* expressive navigation: selected destinations grow into a filled pill */
+  .tabs { justify-self: center; display: inline-flex; gap: 4px; padding: 7px; background: var(--surface-high); border: 1px solid var(--outline); border-radius: 22px 18px 24px 18px; }
   .tab {
-    height: 38px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 12px; color: var(--on-secondary-container);
-    transition: background .2s, border-radius .35s var(--spring);
+    height: 42px; min-width: 46px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 15px; color: var(--on-secondary-container);
+    transition: background .2s, color .2s, border-radius .35s var(--spring), transform .25s var(--spring), padding .25s var(--spring);
   }
-  .tab:hover { background: color-mix(in srgb, var(--on-secondary-container) 8%, transparent); }
-  .tab span { max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; font-weight: 700; transition: max-width .4s var(--spring), opacity .2s, margin .3s; }
-  .tab.on { background: var(--primary); color: var(--on-primary); padding: 0 16px; }
-  .tab.on span { max-width: 100px; opacity: 1; margin-left: 8px; }
+  .tab:hover { background: color-mix(in srgb, var(--on-secondary-container) 9%, transparent); transform: translateY(-1px); }
+  .tab-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 10px; transition: background .2s, transform .3s var(--spring); }
+  .tab-label { font-size: 13px; font-weight: 650; white-space: nowrap; }
+  .tab.on { background: var(--primary); color: var(--on-primary); padding: 0 15px; border-radius: 16px 21px 17px 19px; box-shadow: 0 3px 9px color-mix(in srgb, var(--primary) 25%, transparent); }
+  .tab.on .tab-icon { background: color-mix(in srgb, var(--on-primary) 16%, transparent); transform: rotate(-5deg) scale(1.04); }
+  .tab:active { transform: scale(.96); }
+  @media (max-width: 1100px) {
+    .tabs { gap: 2px; padding: 5px; }
+    .tab { gap: 5px; min-width: 0; padding: 0 8px; }
+    .tab-label { font-size: 12px; }
+    .tab.on { padding: 0 10px; }
+  }
 
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--outline); overflow: hidden; }
   .grid > div { background: var(--surface); padding: 14px 18px; display: grid; gap: 4px; }

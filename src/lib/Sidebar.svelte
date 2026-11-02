@@ -4,6 +4,7 @@
   import Icon from './Icon.svelte';
   import Avatar from './Avatar.svelte';
   import { cookie } from './shapes.js';
+  import { convertFileSrc } from '@tauri-apps/api/core';
 
   const LOADERS = { vanilla: 'Vanilla', fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge' };
   let q = $state('');
@@ -13,6 +14,7 @@
   const accountName = $derived(app.account?.username ?? app.settings?.username ?? 'Player');
   const providerName = (key) => ({ microsoft: 'Microsoft', elyby: 'Ely.by', littleskin: 'LittleSkin' }[key] ?? key);
   const INSTANCE_COLORS = ['#6A52B3', '#2E6B34', '#2B5EA7', '#C2562B', '#B3487A', '#0E8A8A', '#B8860B', '#5A5A66'];
+  const imageSrc = (path) => path ? (/^(https?:|data:|asset:)/i.test(path) ? path : convertFileSrc(path)) : '';
   let instanceMenu = $state(null);
   let styleOpen = $state(false);
   function toggleAccountSwitcher(event) {
@@ -79,11 +81,11 @@
     <input placeholder="Search instances" bind:value={q} />
   </label>
 
-  <div class="list">
+  <div class="list" class:grid={app.settings?.instanceLayout === 'grid'}>
     {#each list as inst (inst.id)}
       {@const g = app.game[inst.id]}
       <button class="item" class:active={inst.id === app.selectedId} onclick={() => selectInstance(inst.id)} oncontextmenu={(event) => openInstanceMenu(event, inst)}>
-        <span class="ico" style:background={inst.color} style:clip-path={cookie(8, 0.07)}>{inst.name.slice(0, 1).toUpperCase()}</span>
+        {#if inst.iconUrl}<img class="ico custom" src={imageSrc(inst.iconUrl)} alt="" />{:else}<span class="ico" style:background={inst.color} style:clip-path={cookie(8, 0.07)}>{inst.name.slice(0, 1).toUpperCase()}</span>{/if}
         <span class="meta">
           <span class="name">{inst.name}</span>
           <span class="sub">{inst.mcVersion} · {LOADERS[inst.loader] ?? inst.loader}</span>
@@ -175,6 +177,12 @@
   .search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--outline); color: var(--text-dim); }
   .search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; }
   .list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin: 0 -4px; padding: 0 4px; }
+  .list.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+  .list.grid .item { min-width: 0; flex-direction: column; align-items: flex-start; gap: 7px; padding: 10px; border: 1px solid var(--outline); background: var(--surface-high); }
+  .list.grid .item.active { background: var(--primary-container); border-color: transparent; }
+  .list.grid .ico { width: 100%; height: auto; aspect-ratio: 1; font-size: 22px; border-radius: 13px; }
+  .list.grid .ico.custom { object-fit: cover; }
+  .list.grid .meta { width: 100%; }
   .item {
     display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; text-align: left; width: 100%;
     transition: background .15s, border-radius .3s var(--spring);

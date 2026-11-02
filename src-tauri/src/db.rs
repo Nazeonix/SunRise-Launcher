@@ -37,6 +37,8 @@ pub struct Instance {
     pub dir: String,
     /// optional screenshot used as the instance banner
     pub banner_url: String,
+    /// optional image used as the instance avatar
+    pub icon_url: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -56,6 +58,8 @@ pub struct NewInstance {
     pub color: String,
     #[serde(default)]
     pub banner_url: String,
+    #[serde(default)]
+    pub icon_url: String,
     /// parent folder chosen in the dialog ("" = Settings default)
     #[serde(default)]
     pub dir_parent: String,
@@ -77,6 +81,10 @@ pub struct Settings {
     pub instances_dir: String,
     /// the user's own CurseForge API key (Modrinth needs none)
     pub curseforge_key: String,
+    /// paths in the user's media queue
+    pub music_tracks: Vec<String>,
+    /// list | grid
+    pub instance_layout: String,
 }
 
 impl Default for Settings {
@@ -93,6 +101,8 @@ impl Default for Settings {
             show_snapshots: false,
             instances_dir: String::new(),
             curseforge_key: String::new(),
+            music_tracks: Vec::new(),
+            instance_layout: "list".into(),
         }
     }
 }
@@ -109,7 +119,7 @@ pub struct Account {
     pub refresh_token: String,
 }
 
-const COLS: &str = "id,name,mc_version,loader,loader_version,java_path,ram_mb,color,last_played,created_at,dir,banner_url";
+const COLS: &str = "id,name,mc_version,loader,loader_version,java_path,ram_mb,color,last_played,created_at,dir,banner_url,icon_url";
 
 fn row_to_instance(r: &Row) -> rusqlite::Result<Instance> {
     Ok(Instance {
@@ -125,6 +135,7 @@ fn row_to_instance(r: &Row) -> rusqlite::Result<Instance> {
         created_at: r.get(9)?,
         dir: r.get(10)?,
         banner_url: r.get(11)?,
+        icon_url: r.get(12)?,
     })
 }
 
@@ -147,7 +158,8 @@ impl Db {
                  last_played INTEGER,
                  created_at INTEGER NOT NULL,
                  dir TEXT NOT NULL DEFAULT '',
-                 banner_url TEXT NOT NULL DEFAULT ''
+                 banner_url TEXT NOT NULL DEFAULT '',
+                 icon_url TEXT NOT NULL DEFAULT ''
              );
              CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
              CREATE TABLE IF NOT EXISTS account(
@@ -245,6 +257,14 @@ impl Db {
                 [],
             )?;
         }
+        let has_icon_url = {
+            let mut st = conn.prepare("PRAGMA table_info(instances)")?;
+            let names = st.query_map([], |r| r.get::<_, String>(1))?.collect::<rusqlite::Result<Vec<_>>>()?;
+            names.iter().any(|n| n == "icon_url")
+        };
+        if !has_icon_url {
+            conn.execute("ALTER TABLE instances ADD COLUMN icon_url TEXT NOT NULL DEFAULT ''", [])?;
+        }
         // the file holds the refresh token – keep it private
         #[cfg(unix)]
         {
@@ -277,8 +297,8 @@ impl Db {
         let id = {
             let c = self.0.lock().unwrap();
             c.execute(
-                "INSERT INTO instances(name,mc_version,loader,loader_version,java_path,ram_mb,color,created_at,dir,banner_url)
-                 VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)",
+                "INSERT INTO instances(name,mc_version,loader,loader_version,java_path,ram_mb,color,created_at,dir,banner_url,icon_url)
+                 VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)",
                 params![
                     n.name,
                     n.mc_version,
@@ -289,7 +309,8 @@ impl Db {
                     if n.color.is_empty() { "#6A52B3" } else { n.color.as_str() },
                     now(),
                     dir,
-                    n.banner_url
+                    n.banner_url,
+                    n.icon_url
                 ],
             )?;
             c.last_insert_rowid()
@@ -300,8 +321,8 @@ impl Db {
     pub fn update_instance(&self, i: &Instance) -> Result<()> {
         let c = self.0.lock().unwrap();
         c.execute(
-            "UPDATE instances SET name=?1,mc_version=?2,loader=?3,loader_version=?4,java_path=?5,ram_mb=?6,color=?7,banner_url=?8 WHERE id=?9",
-            params![i.name, i.mc_version, i.loader, i.loader_version, i.java_path, i.ram_mb, i.color, i.banner_url, i.id],
+            "UPDATE instances SET name=?1,mc_version=?2,loader=?3,loader_version=?4,java_path=?5,ram_mb=?6,color=?7,banner_url=?8,icon_url=?9 WHERE id=?10",
+            params![i.name, i.mc_version, i.loader, i.loader_version, i.java_path, i.ram_mb, i.color, i.banner_url, i.icon_url, i.id],
         )?;
         Ok(())
     }

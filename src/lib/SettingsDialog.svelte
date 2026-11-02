@@ -51,8 +51,18 @@
     {/each}
   </div>
   <div class="field">
-    <label>Appearance mode</label>
+    <span class="label">Appearance mode</span>
     <Seg options={MODES} value={s.mode} onchange={(mode) => saveSettings({ mode })} />
+  </div>
+  <div class="field">
+    <span class="label">Instance layout</span>
+    <div class="layouts" role="radiogroup" aria-label="Instance layout">
+      {#each [{ key: 'list', label: 'Comfortable list', icon: '☰' }, { key: 'grid', label: 'Compact grid', icon: '▦' }] as layout}
+        <button class="layout-choice" class:on={(s.instanceLayout || 'list') === layout.key} role="radio" aria-checked={(s.instanceLayout || 'list') === layout.key} onclick={() => saveSettings({ instanceLayout: layout.key })}>
+          <span class="layout-glyph">{layout.icon}</span><b>{layout.label}</b><small>{layout.key === 'list' ? 'Names and versions' : 'More instances at once'}</small>
+        </button>
+      {/each}
+    </div>
   </div>
 
   <h3>Game defaults</h3>
@@ -133,6 +143,13 @@
   .link { color: var(--primary); font-weight: 700; }
   code { background: var(--surface-high); padding: 1px 6px; border-radius: 6px; font-size: 12.5px; }
   .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; margin-top: 8px; }
+  .layouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .layout-choice { display: grid; grid-template-columns: 42px 1fr; align-items: center; column-gap: 10px; text-align: left; padding: 12px; border-radius: 16px; border: 1px solid var(--outline); background: var(--surface-high); transition: border-radius .3s var(--spring), border-color .2s, transform .2s; }
+  .layout-choice:hover { transform: translateY(-1px); }
+  .layout-choice.on { border: 2px solid var(--primary); background: var(--primary-container); color: var(--on-primary-container); border-radius: 19px 15px 20px 15px; }
+  .layout-choice b, .layout-choice small { grid-column: 2; }
+  .layout-choice small { color: var(--text-dim); font-size: 12px; }
+  .layout-glyph { grid-column: 1; grid-row: 1 / span 2; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: var(--surface); color: var(--primary); font-size: 23px; }
   .theme { display: grid; gap: 8px; padding: 12px; text-align: left; border-radius: 12px; border: 2px solid; transition: transform .25s var(--spring), border-radius .3s var(--spring); }
   .theme:hover { transform: translateY(-2px); }
   .theme.on { border-radius: 18px; }

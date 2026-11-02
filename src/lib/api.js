@@ -31,6 +31,8 @@ export const api = {
   openFolder: (id, kind) => invoke('open_folder', { id, kind }),
   openUrl: (url) => invoke('open_url', { url }),
   pickFolder: () => invoke('pick_folder'),
+  pickImage: () => invoke('pick_image'),
+  pickMusicFiles: () => invoke('pick_music_files'),
 
   searchPacks: (source, query, offset) => invoke('search_modpacks', { source, query, offset }),
   packVersions: (source, projectId) => invoke('modpack_versions', { source, projectId }),

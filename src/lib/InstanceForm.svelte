@@ -3,6 +3,7 @@
   import { api } from './api.js';
   import Seg from './Seg.svelte';
   import { toast } from './state.svelte.js';
+  import { convertFileSrc } from '@tauri-apps/api/core';
 
   let { form = $bindable(), showFolder = false } = $props();
 
@@ -14,6 +15,14 @@
       toast(e);
     }
   }
+
+  async function pickImage(field) {
+    try {
+      const path = await api.pickImage();
+      if (path) form[field] = path;
+    } catch (e) { toast(e); }
+  }
+  const imageSrc = (path) => path ? (/^(https?:|data:|asset:)/i.test(path) ? path : convertFileSrc(path)) : '';
 
   const COLORS = ['#6A52B3', '#2E6B34', '#2B5EA7', '#C2562B', '#B3487A', '#0E8A8A', '#B8860B', '#5A5A66'];
   const LOADERS = [
@@ -131,10 +140,36 @@
   </div>
 </div>
 
+<div class="field">
+  <span class="label">Instance images</span>
+  <div class="image-fields">
+    <div class="image-control">
+      {#if form.iconUrl}<img src={imageSrc(form.iconUrl)} alt="Instance icon preview" class="icon-preview" />{:else}<div class="icon-preview fallback" style:background={form.color}>{(form.name || 'M').slice(0, 1).toUpperCase()}</div>{/if}
+      <div><b>Custom icon</b><p class="hint">PNG, JPG, WebP or GIF</p></div>
+      <button type="button" class="btn sm" onclick={() => pickImage('iconUrl')}>Choose…</button>
+      {#if form.iconUrl}<button type="button" class="icon-btn" aria-label="Remove custom icon" onclick={() => form.iconUrl = ''}>×</button>{/if}
+    </div>
+    <div class="image-control">
+      {#if form.bannerUrl}<img src={imageSrc(form.bannerUrl)} alt="Instance background preview" class="banner-preview" />{:else}<div class="banner-preview fallback">Sunrise background</div>{/if}
+      <div><b>Custom background</b><p class="hint">Shown behind the instance title</p></div>
+      <button type="button" class="btn sm" onclick={() => pickImage('bannerUrl')}>Choose…</button>
+      {#if form.bannerUrl}<button type="button" class="icon-btn" aria-label="Remove custom background" onclick={() => form.bannerUrl = ''}>×</button>{/if}
+    </div>
+  </div>
+</div>
+
 <style>
   .snap { font-size: 13.5px; white-space: nowrap; color: var(--text-dim); font-weight: 600; }
   .colors { display: flex; gap: 8px; flex-wrap: wrap; }
   .sw { width: 30px; height: 30px; border-radius: 10px; transition: border-radius .3s var(--spring), transform .2s var(--spring); }
   .sw:hover { transform: scale(1.1); }
   .sw.on { border-radius: 50%; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--primary); }
+  .image-fields { display: grid; gap: 8px; }
+  .image-control { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 10px; border-radius: 14px; background: var(--surface-high); }
+  .image-control > div:nth-child(2) { flex: 1; min-width: 0; }
+  .image-control .hint { font-size: 12px; }
+  .icon-preview { width: 44px; height: 44px; flex: none; object-fit: cover; border-radius: 13px; }
+  .icon-preview.fallback { display: grid; place-items: center; color: white; font-size: 20px; font-weight: 800; }
+  .banner-preview { width: 88px; height: 44px; flex: none; object-fit: cover; border-radius: 10px; }
+  .banner-preview.fallback { display: grid; place-items: center; color: var(--text-dim); font-size: 11px; }
 </style>

@@ -681,3 +681,22 @@ pub async fn pick_folder(app: AppHandle) -> Option<String> {
     .and_then(|p| p.into_path().ok())
     .map(|p| p.to_string_lossy().to_string())
 }
+
+#[tauri::command]
+pub async fn pick_image(app: AppHandle) -> Option<String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        app.dialog().file().set_title("Choose an image")
+            .add_filter("Images", &["png", "jpg", "jpeg", "webp", "gif"])
+            .blocking_pick_file()
+    }).await.ok().flatten().and_then(|p| p.into_path().ok()).map(|p| p.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn pick_music_files(app: AppHandle) -> Vec<String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        app.dialog().file().set_title("Add music")
+            .add_filter("Audio", &["mp3", "ogg", "wav", "flac", "m4a", "aac"])
+            .blocking_pick_files()
+    }).await.ok().flatten().unwrap_or_default().into_iter()
+        .filter_map(|p| p.into_path().ok().map(|p| p.to_string_lossy().to_string())).collect()
+}
