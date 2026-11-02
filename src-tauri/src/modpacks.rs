@@ -32,7 +32,11 @@ use url::Url;
 
 const MR_API: &str = "https://api.modrinth.com/v2";
 const CF_API: &str = "https://api.curseforge.com/v1";
+// Kept with the disabled CurseForge browse integration.
+#[allow(dead_code)]
 const CF_MINECRAFT: u32 = 432;
+// Kept with the disabled CurseForge browse integration.
+#[allow(dead_code)]
 const CF_MODPACKS: u32 = 4471;
 const NO_KEY: &str =
     "Add your CurseForge API key in Settings first (free at console.curseforge.com). Modrinth works without a key.";
@@ -282,6 +286,8 @@ async fn modpack_banner_url(
     }
 }
 
+// Kept for when CurseForge browsing is re-enabled.
+#[allow(dead_code)]
 async fn cf_search(
     client: &Client,
     key: &str,
@@ -318,6 +324,8 @@ async fn cf_search(
         .collect())
 }
 
+// Kept for when CurseForge browsing is re-enabled.
+#[allow(dead_code)]
 async fn cf_versions(client: &Client, key: &str, mod_id: &str) -> Result<Vec<PackVersion>> {
     let v = cf_json(
         cf_req(client, key, Method::GET, &format!("/mods/{mod_id}/files"))

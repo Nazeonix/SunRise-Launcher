@@ -302,6 +302,8 @@ where
 
 // ───────────────────────── refresh at launch ─────────────────────────
 
+// Kept for when Microsoft sign-in is re-enabled.
+#[allow(dead_code)]
 pub async fn refresh(
     client: &Client,
     client_id: &str,
