@@ -346,22 +346,14 @@ async fn run_inner(
 
     // Signed-in account if present, otherwise offline with the chosen username.
     let auth_info: AuthInfo = match state.db.account() {
+        // A legacy Microsoft account may remain stored, but launches use the offline profile
+        // while Microsoft sign-in is disabled.
+        Some(acc) if acc.provider == "microsoft" => AuthInfo::offline(&settings.username),
         Some(acc) => {
-            if acc.provider == "microsoft" {
-                let cid = client_id(&settings);
-                if cid.is_empty() {
-                    bail!("Enter your Azure client ID in Settings to use your Microsoft account");
-                }
-                rep.set("Signing in with Microsoft…", 0.01);
-                let (info, updated) = auth::refresh(&state.http, &cid, &acc).await?;
-                state.db.save_account(&updated)?;
-                info
-            } else {
-                rep.set(format!("Signing in with {}…", acc.provider), 0.01);
-                let (info, updated) = auth::refresh_yggdrasil(&state.http, &acc).await?;
-                state.db.save_account(&updated)?;
-                info
-            }
+            rep.set(format!("Signing in with {}…", acc.provider), 0.01);
+            let (info, updated) = auth::refresh_yggdrasil(&state.http, &acc).await?;
+            state.db.save_account(&updated)?;
+            info
         }
         None => AuthInfo::offline(&settings.username),
     };
@@ -484,6 +476,11 @@ pub fn login_start(
     password: String,
     totp: String,
 ) -> Result<(), String> {
+    // Microsoft sign-in is disabled until Sunrise has its own approved app registration.
+    if provider == "microsoft" {
+        return Err("Microsoft sign-in is disabled in this build".into());
+    }
+
     let cid = if provider == "microsoft" {
         let cid = client_id(&state.db.settings());
         if cid.is_empty() {

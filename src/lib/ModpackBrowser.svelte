@@ -6,7 +6,8 @@
 
   const SOURCES = [
     { value: 'modrinth', label: 'Modrinth' },
-    { value: 'curseforge', label: 'CurseForge' },
+    // CurseForge is intentionally disabled; its API integration requires a dedicated key.
+    // { value: 'curseforge', label: 'CurseForge' },
   ];
 
   let source = $state('modrinth');
@@ -118,18 +119,20 @@
     <div class="bar">
       <Seg options={SOURCES} bind:value={source} />
       <input class="input" placeholder="Search modpacks…" bind:value={query} />
-      <button class="btn sm" onclick={importFile} title="Install a .mrpack or CurseForge .zip from your computer">Import file…</button>
+      <button class="btn sm" onclick={importFile} title="Install a Modrinth .mrpack from your computer">Import file…</button>
     </div>
 
     {#if error}
       <div class="notice">
         <p class="err">{error}</p>
+        <!-- CurseForge API key controls are disabled with the CurseForge integration.
         {#if source === 'curseforge'}
           <div class="row">
             <button class="btn sm primary" onclick={() => (app.dialog = 'settings')}>Open Settings</button>
             <button class="btn sm" onclick={() => api.openUrl('https://console.curseforge.com/').catch(toast)}>Get a free API key</button>
           </div>
         {/if}
+        -->
       </div>
     {/if}
 
@@ -183,7 +186,6 @@
     <p class="hint" style="margin-top:12px">
       Creates a new instance, downloads the pack's mods and files, and sets the right Minecraft version and mod loader.
       Press Play afterwards to download the game itself.
-      {#if source === 'curseforge'}Files whose authors disabled third-party downloads are listed so you can fetch them manually.{/if}
     </p>
 
     <div class="foot">

@@ -8,12 +8,13 @@
   let { startAdding = false } = $props();
   let adding = $state(false);
   let initialized = false;
-  let provider = $state('microsoft');
+  let provider = $state('elyby');
   let email = $state('');
   let password = $state('');
   let totp = $state('');
   const providers = [
-    { id: 'microsoft', name: 'Microsoft', detail: 'Official account', mark: 'M' },
+    // Microsoft sign-in stays disabled until Sunrise has its own approved app registration.
+    // { id: 'microsoft', name: 'Microsoft', detail: 'Official account', mark: 'M' },
     { id: 'elyby', name: 'Ely.by', detail: 'Alternative account', mark: 'E' },
     { id: 'littleskin', name: 'LittleSkin', detail: 'Alternative account', mark: 'L' },
   ];
@@ -78,7 +79,7 @@
   {/if}
 
   {#if !adding && app.login.status !== 'waiting'}
-    <button class="add-row" onclick={() => (adding = true)}><span class="add-mark"><Icon name="plus" size={20} /></span><span><b>Add another account</b><small>Microsoft, Ely.by or LittleSkin</small></span><span class="add-arrow"><Icon name="chevron" size={18} /></span></button>
+    <button class="add-row" onclick={() => (adding = true)}><span class="add-mark"><Icon name="plus" size={20} /></span><span><b>Add another account</b><small>Ely.by or LittleSkin</small></span><span class="add-arrow"><Icon name="chevron" size={18} /></span></button>
   {/if}
 
   {#if adding}

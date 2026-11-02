@@ -79,8 +79,9 @@ export async function init() {
 }
 
 function applyAccountsSnapshot(snapshot) {
-  app.accounts = snapshot.accounts ?? [];
-  app.activeAccountId = snapshot.activeAccountId ?? null;
+  // Ignore legacy Microsoft accounts while Microsoft sign-in is disabled.
+  app.accounts = (snapshot.accounts ?? []).filter((account) => account.provider !== 'microsoft');
+  app.activeAccountId = app.accounts.some((account) => account.id === snapshot.activeAccountId) ? snapshot.activeAccountId : null;
   app.account = app.accounts.find((a) => a.id === app.activeAccountId) ?? null;
   for (const account of app.accounts) {
     if (account.skinUrl) continue;

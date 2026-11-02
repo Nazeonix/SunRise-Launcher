@@ -22,7 +22,11 @@ A simple Minecraft launcher with an **instances sidebar**.
 - Java detection (25 / 21 / 17 / 11 / 8 …) with per-instance override, manual paths and Adoptium download links.
 - Linux **dedicated-GPU (PRIME) offload** for the game process.
 - 8 Material You colour schemes, procedural pixel-art banner, wavy progress, cookie/clover shapes.
-- Multiple saved Microsoft, Ely.by and LittleSkin accounts, plus offline mode.
+- Ely.by and LittleSkin accounts, plus offline mode. Microsoft sign-in is currently disabled.
+
+## Versioning
+
+The current release is **0.3.0**. Bump bug-fix releases by **0.1.0** and minor releases by **0.0.5**; keep the package, Tauri config, and Cargo versions in sync.
 
 ## Build & run
 
@@ -67,8 +71,10 @@ npm run tauri build     # installers in src-tauri\target\release\bundle\  (nsis 
 - Unsigned installers trigger a SmartScreen warning.
 - A GitHub Actions workflow (`.github/workflows/build.yml`) builds Windows and Linux bundles for you.
 
-## Microsoft sign-in (OAuth 2.0 + PKCE)
+Microsoft sign-in is currently disabled. Use an offline profile or an Ely.by/LittleSkin account.
 
+<!-- Microsoft sign-in setup retained while the provider is disabled:
+## Microsoft sign-in (OAuth 2.0 + PKCE)
 Sunrise opens your browser at Microsoft's login page, listens on `http://localhost:<random port>` for the
 redirect, and exchanges the code with a PKCE verifier (no client secret). Then Xbox Live → XSTS → Minecraft services.
 Only the refresh token is stored (in `sunrise.db`, file mode 600).
@@ -84,6 +90,7 @@ You need **your own Azure app registration** (free) – Microsoft always require
    https://aka.ms/mce-reviewappid
 
 Until then the launcher works in **offline mode** (username under *Account*).
+-->
 
 ## Ely.by and LittleSkin sign-in
 
@@ -101,16 +108,14 @@ Saved accounts can be switched or removed from **Account**. The active account i
 - **Forge / NeoForge** – installer downloaded and run headless (`--installClient`), first launch takes a minute;
   logs in `installers/`. NeoForge supports Minecraft 1.20.2+.
 
-## Modpacks (Modrinth + CurseForge)
+## Modpacks (Modrinth)
 
 **Sidebar → Modpacks.** Search, pick a version, press *Install*: Sunrise creates a new instance, downloads the pack's
 files, extracts the overrides and sets the Minecraft version and loader. Press *Play* afterwards to download the game.
-**Import file…** installs a local `.mrpack` or CurseForge `.zip`.
+**Import file…** installs a local `.mrpack`.
 
 - **Modrinth** works with no setup (`.mrpack`, files checked against their SHA-512).
-- **CurseForge** needs *your own* free API key (https://console.curseforge.com) → Settings → Modpacks.
-  Authors can forbid third-party downloads; Sunrise respects that and lists those files with a link to the
-  CurseForge page so you can download them yourself (then drop them into the mods folder).
+- CurseForge browsing and imports are currently disabled.
 - Quilt packs are not supported (Fabric, Forge and NeoForge are).
 
 ## App icon

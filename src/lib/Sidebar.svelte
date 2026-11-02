@@ -124,7 +124,7 @@
 
   <div class="newrow">
     <button class="btn primary" onclick={() => (app.dialog = 'new')}><Icon name="plus" /> New</button>
-    <button class="btn" onclick={() => (app.dialog = 'modpacks')} title="Browse modpacks from Modrinth and CurseForge"><Icon name="puzzle" /> Modpacks</button>
+    <button class="btn" onclick={() => (app.dialog = 'modpacks')} title="Browse Modrinth modpacks"><Icon name="puzzle" /> Modpacks</button>
   </div>
 
   <div class="foot">

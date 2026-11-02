@@ -922,6 +922,7 @@ pub async fn search_modpacks(
         "modrinth" => modrinth_search(&state.http, &query, offset)
             .await
             .map_err(err),
+        /* Disabled CurseForge search:
         "curseforge" => {
             let key = cf_key(&state.db.settings());
             if key.is_empty() {
@@ -930,7 +931,8 @@ pub async fn search_modpacks(
             cf_search(&state.http, &key, &query, offset)
                 .await
                 .map_err(err)
-        }
+        } */
+        "curseforge" => Err("CurseForge support is disabled in this build".into()),
         _ => Err("Unknown source".into()),
     }
 }
@@ -945,6 +947,7 @@ pub async fn modpack_versions(
         "modrinth" => modrinth_versions(&state.http, &project_id)
             .await
             .map_err(err),
+        /* Disabled CurseForge version lookup:
         "curseforge" => {
             let key = cf_key(&state.db.settings());
             if key.is_empty() {
@@ -953,7 +956,8 @@ pub async fn modpack_versions(
             cf_versions(&state.http, &key, &project_id)
                 .await
                 .map_err(err)
-        }
+        } */
+        "curseforge" => Err("CurseForge support is disabled in this build".into()),
         _ => Err("Unknown source".into()),
     }
 }
@@ -974,6 +978,9 @@ pub async fn install_modpack(
     state: State<'_, AppState>,
     req: InstallPackReq,
 ) -> Result<Instance, String> {
+    if req.source == "curseforge" {
+        return Err("CurseForge support is disabled in this build".into());
+    }
     let key = cf_key(&state.db.settings());
     // A missing gallery or a temporary gallery API failure must not prevent installation.
     let banner_url = modpack_banner_url(&state.http, &req.source, &req.project_id, &key)
@@ -1034,7 +1041,7 @@ pub async fn pick_modpack_file(app: AppHandle) -> Option<String> {
         app.dialog()
             .file()
             .set_title("Choose a modpack")
-            .add_filter("Modpack", &["mrpack", "zip"])
+        .add_filter("Modrinth modpack", &["mrpack"])
             .blocking_pick_file()
     })
     .await
@@ -1044,7 +1051,7 @@ pub async fn pick_modpack_file(app: AppHandle) -> Option<String> {
     .map(|p| p.to_string_lossy().to_string())
 }
 
-/// Install a modpack from a local .mrpack / CurseForge .zip.
+/// Install a local Modrinth .mrpack file.
 #[tauri::command]
 pub async fn import_modpack_file(
     app: AppHandle,
@@ -1058,6 +1065,9 @@ pub async fn import_modpack_file(
         .await
         .map_err(err)?
         .map_err(err)?;
+    if matches!(&kind, PackKind::Cf(_)) {
+        return Err("CurseForge modpack imports are disabled in this build".into());
+    }
     let meta = pack_info(&kind).map_err(err)?;
     let inst = create_instance_inner(
         &state,

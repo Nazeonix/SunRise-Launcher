@@ -9,9 +9,7 @@
   const s = $derived(app.settings);
   const MAJORS = [25, 21, 17, 11, 8];
   let javaInput = $state('');
-  let clientId = $state(app.settings?.msClientId ?? '');
   let ram = $state(app.settings?.ramMb ?? 4096);
-  let cfKey = $state(app.settings?.curseforgeKey ?? '');
 
   const javaFor = (m) => app.javas.find((j) => j.major === m);
 
@@ -119,19 +117,18 @@
     <button class="btn sm" onclick={refreshJava}>Re-scan</button>
   </div>
 
+  <!-- Disabled until Sunrise has a dedicated CurseForge integration/API key. -->
+  <!--
   <h3>Modpacks</h3>
   <div class="field" style="margin-top:6px">
     <label for="s-cf">CurseForge API key</label>
-    <input id="s-cf" class="input" type="password" placeholder="Only needed for CurseForge modpacks" bind:value={cfKey} onchange={() => saveSettings({ curseforgeKey: cfKey.trim() })} />
-    <p class="hint">Modrinth needs no key. For CurseForge, create a free key at <button class="link" onclick={() => api.openUrl('https://console.curseforge.com/').catch(toast)}>console.curseforge.com</button>. The env var <code>SUNRISE_CF_KEY</code> also works.</p>
+    <input id="s-cf" class="input" type="password" placeholder="Only needed for CurseForge modpacks" />
   </div>
+  -->
 
+  <!-- Microsoft sign-in is disabled until Sunrise has its own approved app registration.
   <h3>Microsoft sign-in</h3>
-  <div class="field" style="margin-top:6px">
-    <label for="s-cid">Azure app (client) ID</label>
-    <input id="s-cid" class="input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" bind:value={clientId} onchange={() => saveSettings({ msClientId: clientId.trim() })} />
-    <p class="hint">Needs your own Azure app (redirect URI <code>http://localhost</code>, public client) that Mojang has approved – see the README. The env var <code>SUNRISE_MS_CLIENT_ID</code> also works.</p>
-  </div>
+  -->
 
   <h3>About</h3>
   <p class="hint">Sunrise {app.info.version}<br />Data folder: <code>{app.info.root}</code></p>
@@ -140,7 +137,6 @@
 <style>
   h3 { margin: 22px 0 6px; font-size: 14px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-dim); }
   h3:first-of-type { margin-top: 6px; }
-  .link { color: var(--primary); font-weight: 700; }
   code { background: var(--surface-high); padding: 1px 6px; border-radius: 6px; font-size: 12.5px; }
   .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; margin-top: 8px; }
   .layouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
