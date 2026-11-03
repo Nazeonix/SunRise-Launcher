@@ -119,8 +119,8 @@ files, extracts the overrides and sets the Minecraft version and loader. Press *
 - Quilt packs are not supported (Fabric, Forge and NeoForge are).
 
 ## App icon
-`public/icon.svg` is the source (16×16 pixel art). The PNG/ICO files in `src-tauri/icons/` are scaled with
-nearest-neighbour so the pixels stay sharp. Don't run `tauri icon` on it – that resamples smoothly and blurs the pixels.
+`public/icon.svg` is the scalable source. Regenerate the platform PNG/ICO files in `src-tauri/icons/` with
+`npm run tauri icon public/icon.svg -o src-tauri/icons` after changing it.
 
 ## Project layout
 ```
