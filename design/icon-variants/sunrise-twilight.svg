@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Sunrise Twilight</title>
+  <desc id="desc">A twilight sun rising over a stylized horizon, with soft expressive rays and waves.</desc>
+  <defs>
+    <linearGradient id="sky" x1=".12" y1="0" x2=".88" y2="1">
+      <stop stop-color="#8D75F2"/>
+      <stop offset="1" stop-color="#5C48C5"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".45" r=".58">
+      <stop stop-color="#F6BAA7" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#F6BAA7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFF0B7"/>
+      <stop offset="1" stop-color="#FFC77B"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="144" fill="url(#sky)"/>
+  <circle cx="260" cy="229" r="188" fill="url(#glow)"/>
+  <path d="M179 278a77 77 0 0 1 154 0" fill="url(#sun)"/>
+  <g fill="none" stroke="#FFF9F2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M139 280h234" stroke-width="21"/>
+    <path d="M256 104v39M166 150l28 28M346 150l-28 28" stroke-width="19"/>
+    <path d="M188 331h136M213 373h86" stroke-width="17" opacity=".94"/>
+  </g>
+  <path d="M107 424c52-27 89-27 133-7 42 19 82 19 124-1 16-8 29-13 41-15v63H107z" fill="#443B9B" opacity=".52"/>
+  <path d="m103 229 7 18 18 7-18 7-7 18-7-18-18-7 18-7zM409 227l6 15 15 6-15 6-6 15-6-15-15-6 15-6z" fill="#FFE8B4"/>
+  <circle cx="371" cy="112" r="8" fill="#FFF9F2" opacity=".9"/>
+</svg>
