@@ -44,7 +44,7 @@
 </div>
 
 <style>
-  .shell { display: grid; grid-template-columns: 284px 1fr; height: 100vh; }
+  .shell { display: grid; grid-template-columns: 264px 1fr; height: 100vh; }
   main { overflow-y: auto; padding: 22px 28px 28px; }
   .center { height: 100%; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; max-width: 420px; margin: 0 auto; }
   .big { width: 34px; height: 34px; color: var(--primary); }

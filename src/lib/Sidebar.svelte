@@ -65,11 +65,6 @@
 <svelte:window onclick={handleWindowClick} />
 
 <aside>
-  <div class="brand">
-    <img class="logo" src="/icon.svg" alt="" width="44" height="44" />
-    <span>Sunrise</span>
-  </div>
-
   <button class="home-link" class:active={app.selectedId === null} onclick={() => (app.selectedId = null)}><Icon name="sun" size={18} /><span>Home</span></button>
 
   <div class="head">
@@ -168,14 +163,12 @@
 
 <style>
   aside {
-    display: flex; flex-direction: column; gap: 12px; padding: 16px 14px 14px;
+    display: flex; flex-direction: column; gap: 10px; padding: 12px;
     background: var(--surface); border-right: 1px solid var(--outline); height: 100vh; min-height: 0;
   }
-  .brand { display: flex; align-items: center; gap: 12px; padding: 2px 6px 6px; font-size: 22px; font-weight: 800; letter-spacing: .2px; }
   .home-link { display:flex; align-items:center; gap:12px; min-height:42px; padding:0 12px; border-radius:14px; text-align:left; font-weight:700; color:var(--text-dim); transition:background .18s var(--spring),color .18s; }
   .home-link:hover { background:var(--secondary-container); color:var(--on-secondary-container); }
   .home-link.active { background:var(--primary-container); color:var(--on-primary-container); }
-  .logo { width: 44px; height: 44px; border-radius: 10px; image-rendering: pixelated; flex: none; }
   .head { display: flex; align-items: center; gap: 8px; padding: 0 2px 0 6px; }
   .head .label { flex: 1; text-transform: uppercase; letter-spacing: .6px; font-size: 12px; }
   .count { font-size: 12px; font-weight: 700; color: var(--on-primary-container); background: var(--primary-container); border-radius: 8px; padding: 2px 8px; }
@@ -183,9 +176,9 @@
   .search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; }
   .list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin: 0 -4px; padding: 0 4px; }
   .list.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
-  .list.grid .item { min-width: 0; flex-direction: column; align-items: flex-start; gap: 7px; padding: 10px; border: 1px solid var(--outline); background: var(--surface-high); }
+  .list.grid .item { min-width: 0; flex-direction: column; align-items: flex-start; gap: 7px; padding: 9px; border: 1px solid var(--outline-variant); background: var(--surface-high); }
   .list.grid .item.active { background: var(--primary-container); border-color: transparent; }
-  .list.grid .ico { width: 100%; height: auto; aspect-ratio: 1; font-size: 22px; border-radius: 13px; }
+  .list.grid .ico { width: 88%; height: auto; aspect-ratio: 1; align-self: center; font-size: 22px; border-radius: 15px; }
   .list.grid .ico.custom { object-fit: cover; }
   .list.grid .meta { width: 100%; }
   .item {
@@ -201,7 +194,7 @@
   .dot { width: 10px; height: 10px; border-radius: 50%; background: #4CAF50; box-shadow: 0 0 0 3px color-mix(in srgb, #4CAF50 25%, transparent); flex: none; }
   .empty { padding: 8px 10px; }
   .newrow { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
-  .newrow .btn { height: 42px; padding: 0 10px; }
+  .newrow .btn { height: 40px; padding: 0 9px; }
   .foot { display: flex; align-items: center; gap: 6px; padding-top: 12px; border-top: 1px solid var(--outline); }
   .account-wrap { position: relative; flex: 1; min-width: 0; }
   .account { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 12px; text-align: left; transition: background .15s; }
