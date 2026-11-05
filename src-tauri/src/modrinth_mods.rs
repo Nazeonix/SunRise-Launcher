@@ -30,6 +30,90 @@ pub struct ModResult {
     page_url: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModUpdate {
+    current_name: String,
+    project_id: String,
+    title: String,
+    version: String,
+    file_name: String,
+}
+
+async fn installed_project_version(client: &reqwest::Client, path: &std::path::Path) -> Result<(String, Value)> {
+    let bytes = tokio::fs::read(path).await?;
+    let hash = format!("{:x}", Sha512::digest(&bytes));
+    let version = client.get(format!("{API}/version_file/{hash}"))
+        .query(&[("algorithm", "sha512")]).send().await?.error_for_status()?.json::<Value>().await?;
+    let project_id = str_at(&version, "project_id");
+    if project_id.is_empty() { bail!("Modrinth could not identify this mod"); }
+    Ok((project_id, version))
+}
+
+#[tauri::command]
+pub async fn check_mod_updates(state: State<'_, AppState>, id: i64) -> Result<Vec<ModUpdate>, String> {
+    let result: Result<Vec<ModUpdate>> = async {
+        let instance = state.db.instance(id)?;
+        if instance.loader == "vanilla" { bail!("Choose a mod loader before checking mod updates"); }
+        let dir = launcher::game_dir(&state.root, &instance).join("mods");
+        let mut updates = Vec::new();
+        let entries = match tokio::fs::read_dir(&dir).await { Ok(entries) => entries, Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(updates), Err(e) => return Err(e.into()) };
+        let mut entries = entries;
+        while let Some(entry) = entries.next_entry().await? {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if !name.to_lowercase().ends_with(".jar") { continue; }
+            let path = entry.path();
+            if let Ok((project_id, current)) = installed_project_version(&state.http, &path).await {
+                let latest = state.http.get(format!("{API}/project/{project_id}/version"))
+                    .query(&[("game_versions", json!([instance.mc_version]).to_string()), ("loaders", json!([instance.loader]).to_string()), ("include_changelog", "false".into())])
+                    .send().await?.error_for_status()?.json::<Vec<Value>>().await?;
+                let version = latest.iter().find(|v| v["version_type"].as_str() == Some("release")).or_else(|| latest.first());
+                if let Some(version) = version {
+                    let file = primary_jar(version)?;
+                    if str_at(&current, "id") != str_at(version, "id") {
+                        updates.push(ModUpdate { current_name: name, project_id, title: str_at(version, "name"), version: str_at(version, "version_number"), file_name: file.name });
+                    }
+                }
+            }
+        }
+        Ok(updates)
+    }.await;
+    result.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn update_mod(state: State<'_, AppState>, id: i64, current_name: String, project_id: String) -> Result<String, String> {
+    let result: Result<String> = async {
+        if state.running.lock().unwrap().contains_key(&id) { bail!("Stop Minecraft before updating mods"); }
+        if current_name.is_empty() || current_name.contains('/') || current_name.contains('\\') || current_name.contains("..") || !current_name.to_lowercase().ends_with(".jar") { bail!("Invalid mod file name"); }
+        let instance = state.db.instance(id)?;
+        if instance.loader == "vanilla" { bail!("Choose a mod loader before updating mods"); }
+        let dir = launcher::game_dir(&state.root, &instance).join("mods");
+        let original = dir.join(&current_name);
+        let (identified, _) = installed_project_version(&state.http, &original).await?;
+        if identified != project_id { bail!("The mod file changed since the update check. Refresh the list and try again."); }
+        let version = compatible_version(&state.http, &project_id, None, &instance.mc_version, &instance.loader).await?;
+        let file = primary_jar(&version)?;
+        let target = dir.join(&file.name);
+        if target != original && tokio::fs::try_exists(&target).await? { bail!("{} already exists. Remove or rename it before updating.", file.name); }
+        let bytes = state.http.get(&file.url).send().await?.error_for_status()?.bytes().await?;
+        if format!("{:x}", Sha512::digest(&bytes)) != file.sha512 { bail!("Checksum verification failed for {}", file.name); }
+        let nonce = SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos();
+        let staged = dir.join(format!(".sunrise-update-{id}-{nonce}.jar"));
+        let previous = dir.join(format!(".sunrise-previous-{id}-{nonce}.jar"));
+        tokio::fs::write(&staged, &bytes).await?;
+        if let Err(error) = tokio::fs::rename(&original, &previous).await { let _ = tokio::fs::remove_file(&staged).await; return Err(error.into()); }
+        if let Err(error) = tokio::fs::rename(&staged, &target).await {
+            let _ = tokio::fs::rename(&previous, &original).await;
+            let _ = tokio::fs::remove_file(&staged).await;
+            return Err(error.into());
+        }
+        tokio::fs::remove_file(previous).await?;
+        Ok(file.name)
+    }.await;
+    result.map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 pub async fn search_modrinth_mods(
     state: State<'_, AppState>,

@@ -70,6 +70,8 @@
     <span>Sunrise</span>
   </div>
 
+  <button class="home-link" class:active={app.selectedId === null} onclick={() => (app.selectedId = null)}><Icon name="sun" size={18} /><span>Home</span></button>
+
   <div class="head">
     <span class="label">Instances</span>
     <span class="count">{app.instances.length}</span>
@@ -170,6 +172,9 @@
     background: var(--surface); border-right: 1px solid var(--outline); height: 100vh; min-height: 0;
   }
   .brand { display: flex; align-items: center; gap: 12px; padding: 2px 6px 6px; font-size: 22px; font-weight: 800; letter-spacing: .2px; }
+  .home-link { display:flex; align-items:center; gap:12px; min-height:42px; padding:0 12px; border-radius:14px; text-align:left; font-weight:700; color:var(--text-dim); transition:background .18s var(--spring),color .18s; }
+  .home-link:hover { background:var(--secondary-container); color:var(--on-secondary-container); }
+  .home-link.active { background:var(--primary-container); color:var(--on-primary-container); }
   .logo { width: 44px; height: 44px; border-radius: 10px; image-rendering: pixelated; flex: none; }
   .head { display: flex; align-items: center; gap: 8px; padding: 0 2px 0 6px; }
   .head .label { flex: 1; text-transform: uppercase; letter-spacing: .6px; font-size: 12px; }

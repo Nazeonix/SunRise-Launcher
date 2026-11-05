@@ -14,6 +14,7 @@
   const TABS = [
     { id: 'overview', label: 'Overview', icon: 'info' },
     { id: 'mods', label: 'Mods', icon: 'puzzle' },
+    { id: 'worlds', label: 'Worlds', icon: 'world' },
     { id: 'resourcepacks', label: 'Resource Packs', icon: 'sparkle' },
     { id: 'logs', label: 'Logs', icon: 'doc' },
     { id: 'settings', label: 'Settings', icon: 'gear' },
@@ -30,7 +31,7 @@
     instance.loader === 'vanilla' ? `Minecraft ${instance.mcVersion}` : `Minecraft ${instance.mcVersion} · ${loaderName}${instance.loaderVersion ? ' ' + instance.loaderVersion : ''}`
   );
 
-  let tab = $state('overview');
+  let tab = $state(app.instanceTab ?? 'overview');
 
   // ── logs: live tail while the tab is open
   let log = $state('');
@@ -59,10 +60,25 @@
   let searchedMods = $state(false);
   let searchingMods = $state(false);
   let addingMod = $state('');
+  let modUpdates = $state([]);
+  let checkingUpdates = $state(false);
+  let updatingMod = $state('');
   async function loadMods() {
     try { mods = await api.mods(instance.id); } catch (e) { toast(e); }
   }
   $effect(() => { if (tab === 'mods') loadMods(); });
+  async function checkUpdates() {
+    checkingUpdates = true;
+    try { modUpdates = await api.checkModUpdates(instance.id); toast(modUpdates.length ? `${modUpdates.length} mod update${modUpdates.length === 1 ? '' : 's'} found` : 'All recognized mods are up to date'); }
+    catch (e) { toast(e); }
+    checkingUpdates = false;
+  }
+  async function applyUpdate(update) {
+    updatingMod = update.currentName;
+    try { const name = await api.updateMod(instance.id, update.currentName, update.projectId); toast(`Updated to ${update.version}`); await loadMods(); modUpdates = modUpdates.filter((u) => u.currentName !== update.currentName); }
+    catch (e) { toast(e); }
+    updatingMod = '';
+  }
   async function toggle(m) { try { await api.toggleMod(instance.id, m.name); } catch (e) { toast(e); } loadMods(); }
   async function remove(m) { try { await api.deleteMod(instance.id, m.name); } catch (e) { toast(e); } loadMods(); }
   async function searchMods() {
@@ -120,6 +136,24 @@
     } catch (e) { toast(e); }
   }
 
+  let worlds = $state([]);
+  let editingWorld = $state('');
+  let renameValue = $state('');
+  let worldBusy = $state('');
+  async function loadWorlds() { try { worlds = await api.worlds(instance.id); } catch (e) { toast(e); } }
+  $effect(() => { if (tab === 'worlds') loadWorlds(); });
+  function beginRename(world) { editingWorld = world.name; renameValue = world.name; }
+  async function renameWorld(world) {
+    worldBusy = world.name;
+    try { await api.renameWorld(instance.id, world.name, renameValue); editingWorld = ''; await loadWorlds(); toast('World renamed'); } catch (e) { toast(e); }
+    worldBusy = '';
+  }
+  async function backupWorld(world) {
+    worldBusy = world.name;
+    try { const path = await api.backupWorld(instance.id, world.name); toast(`World backup saved to ${path}`); } catch (e) { toast(e); }
+    worldBusy = '';
+  }
+
   // ── settings tab
   // intentional: the form starts as a copy of the instance (this view is re-created per instance)
   // svelte-ignore state_referenced_locally
@@ -127,10 +161,22 @@
   let saving = $state(false);
   let confirmDel = $state(false);
   let delFiles = $state(false);
+  // svelte-ignore state_referenced_locally
+  let profileDraft = $state($state.snapshot(instance.launchProfiles ?? []));
+  let selectedProfile = $state('');
+  const launchProfile = $derived(profileDraft.find((p) => p.name === selectedProfile) ?? null);
+  let profileName = $state('');
+  function addProfile() {
+    const name = profileName.trim();
+    if (!name) return toast('Enter a profile name');
+    if (profileDraft.some((p) => p.name.toLowerCase() === name.toLowerCase())) return toast('That profile name already exists');
+    profileDraft.push({ name, javaPath: form.javaPath, ramMb: Number(form.ramMb) || 0 });
+    profileName = '';
+  }
   async function save() {
     saving = true;
     try {
-      await updateInstance({ ...$state.snapshot(form), name: form.name.trim() || instance.name });
+      await updateInstance({ ...$state.snapshot(form), launchProfiles: $state.snapshot(profileDraft), name: form.name.trim() || instance.name });
       toast('Saved');
     } catch (e) { toast(e); }
     saving = false;
@@ -161,7 +207,7 @@
     {#if running}
       <button class="btn play stop" onclick={() => stop(instance.id)}><Icon name="stop" size={22} /> Stop</button>
     {:else}
-      <button class="btn primary play" disabled={installing} onclick={() => play(instance.id)}>
+      <button class="btn primary play" disabled={installing} onclick={() => play(instance.id, launchProfile)}>
         {#if installing}<span class="spin"></span> Installing…{:else}<Icon name="play" size={22} /> Play{/if}
       </button>
     {/if}
@@ -175,6 +221,11 @@
       <div class="vt"><small>{kind}</small><b>{instance.mcVersion}</b></div>
       {#if instance.loader !== 'vanilla'}<span class="pill tert">{loaderName}</span>{/if}
     </div>
+
+    <select class="card launch-profile" aria-label="Launch profile" bind:value={selectedProfile}>
+      <option value="">Default</option>
+      {#each profileDraft as p (p.name)}<option value={p.name}>{p.name}</option>{/each}
+    </select>
 
     <button class="card nav" onclick={() => api.openFolder(instance.id, 'game').catch(toast)}>
       <Icon name="folder" /> <span>Folder</span>
@@ -217,7 +268,7 @@
 
   <div class="tabs" role="tablist" aria-label="Instance sections">
     {#each TABS as t (t.id)}
-      <button class="tab" class:on={tab === t.id} onclick={() => (tab = t.id)} role="tab" aria-selected={tab === t.id} aria-label={t.label}>
+      <button class="tab" class:on={tab === t.id} onclick={() => { tab = t.id; app.instanceTab = t.id; }} role="tab" aria-selected={tab === t.id} aria-label={t.label}>
         <span class="tab-icon"><Icon name={t.icon} size={19} /></span><span class="tab-label">{t.label}</span>
       </button>
     {/each}
@@ -235,6 +286,25 @@
       <div class="row" style="margin-top:12px">
         <button class="btn sm" onclick={() => api.openFolder(instance.id, 'game').catch(toast)}><Icon name="folder" size={18} /> Open game folder</button>
         <button class="btn sm" onclick={() => api.openFolder(instance.id, 'mods').catch(toast)}><Icon name="puzzle" size={18} /> Open mods folder</button>
+      </div>
+    {:else if tab === 'worlds'}
+      <div class="world-head"><div><h2>Worlds</h2><p class="hint">Worlds saved in this instance. Stop Minecraft before renaming or backing up worlds.</p></div><button class="btn sm" onclick={loadWorlds}>Refresh</button></div>
+      <div class="world-list card">
+        {#each worlds as world (world.name)}
+          <article class="world-row">
+            <div class="world-mark"><Icon name="world" size={22} /></div>
+            {#if editingWorld === world.name}
+              <form class="world-name" onsubmit={(e) => { e.preventDefault(); renameWorld(world); }}><input class="input" bind:value={renameValue} aria-label="New world name" /><button class="btn sm primary" disabled={!!worldBusy}>Save</button><button type="button" class="btn sm" onclick={() => editingWorld = ''}>Cancel</button></form>
+            {:else}
+              <div class="world-name"><b>{world.name}</b><small>World folder</small></div>
+              <button class="btn sm" onclick={() => api.openWorld(instance.id, world.name).catch(toast)}><Icon name="folder" size={17} /> Open</button>
+              <button class="btn sm" disabled={!!worldBusy || running || installing} title={running || installing ? 'Stop Minecraft first' : 'Rename world'} onclick={() => beginRename(world)}>Rename</button>
+              <button class="btn sm" disabled={!!worldBusy || running || installing} title={running || installing ? 'Stop Minecraft first' : 'Create a copy in world-backups'} onclick={() => backupWorld(world)}>{worldBusy === world.name ? 'Working…' : 'Back up'}</button>
+            {/if}
+          </article>
+        {:else}
+          <div class="world-empty"><Icon name="world" size={28} /><b>No worlds yet</b><span>Play this instance once or create a world in Minecraft.</span></div>
+        {/each}
       </div>
     {:else if tab === 'mods'}
       {#if instance.loader === 'vanilla'}
@@ -275,8 +345,12 @@
         <div class="row" style="margin-bottom:10px">
           <button class="btn sm" onclick={() => api.openFolder(instance.id, 'mods').catch(toast)}><Icon name="folder" size={18} /> Open mods folder</button>
           <button class="btn sm" onclick={loadMods}>Refresh</button>
+          <button class="btn sm" disabled={checkingUpdates || running || installing} title={running || installing ? 'Stop Minecraft first' : ''} onclick={checkUpdates}>{checkingUpdates ? 'Checking…' : 'Check for updates'}</button>
           <span class="hint">{mods.length} mod{mods.length === 1 ? '' : 's'}</span>
         </div>
+        {#if modUpdates.length}
+          <div class="updates card"><b>Updates available</b>{#each modUpdates as update (update.currentName)}<div class="update-row"><span><b>{update.title}</b><small>{update.currentName} → {update.version}</small></span><button class="btn primary sm" disabled={!!updatingMod || running || installing} onclick={() => applyUpdate(update)}>{updatingMod === update.currentName ? 'Updating…' : 'Update'}</button></div>{/each}</div>
+        {/if}
         {#if instance.loader === 'fabric'}<p class="hint" style="margin-bottom:10px">Most Fabric mods also need the <b>Fabric API</b> mod.</p>{/if}
         <div class="mods card">
           {#each mods as m (m.name)}
@@ -346,6 +420,13 @@
     {:else}
       <div class="card pad">
         <InstanceForm bind:form />
+        <div class="profile-editor">
+          <h3>Launch profiles</h3><p class="hint">Save alternate memory and Java choices for this instance.</p>
+          <div class="profile-add"><input class="input" placeholder="Profile name" bind:value={profileName} /><button class="btn sm" onclick={addProfile}>Add profile</button></div>
+          {#each profileDraft as profile, index (index)}
+            <div class="profile-row"><input class="input" bind:value={profile.name} aria-label="Profile name" /><select class="select" bind:value={profile.javaPath}><option value="">Default Java</option>{#each app.javas as java (java.path)}<option value={java.path}>Java {java.major} · {java.path}</option>{/each}</select><label>RAM <input class="input ram" type="number" min="512" max="65536" step="512" bind:value={profile.ramMb} /></label><button class="icon-btn" aria-label="Remove {profile.name}" onclick={() => profileDraft.splice(index, 1)}><Icon name="trash" size={18} /></button></div>
+          {:else}<p class="hint">No saved profiles yet.</p>{/each}
+        </div>
         <div class="foot"><button class="btn primary" disabled={saving} onclick={save}>Save changes</button></div>
       </div>
 
@@ -372,10 +453,11 @@
   .ico.custom { object-fit: cover; }
   h1 { font-size: 28px; line-height: 1.1; }
 
-  .actions { display: grid; grid-template-columns: 1.1fr 1.2fr .8fr; gap: 12px; }
+  .actions { display: grid; grid-template-columns: 1.1fr 1.05fr 1fr .85fr; gap: 10px; }
   .play { height: 60px; font-size: 22px; border-radius: 14px; gap: 10px; }
   .play.stop { background: var(--tertiary-container); color: var(--on-tertiary-container); }
   .card.ver { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 60px; }
+  .launch-profile { height:60px; min-width:0; padding:0 12px; color:var(--text); font:inherit; font-weight:650; }
   .cube { width: 40px; height: 40px; background: var(--primary-container); display: grid; place-items: center; flex: none; }
   .vt { display: grid; line-height: 1.15; flex: 1; min-width: 0; }
   .vt small { color: var(--text-dim); font-weight: 700; font-size: 12px; }
@@ -424,6 +506,30 @@
   .mod.off .mn { opacity: .5; text-decoration: line-through; }
   .mn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
   .mod small { color: var(--text-dim); }
+  .updates { padding:14px 16px; margin-bottom:12px; display:grid; gap:8px; }
+  .update-row { display:flex; align-items:center; gap:12px; justify-content:space-between; padding-top:8px; border-top:1px solid var(--outline-variant); }
+  .update-row>span { display:grid; min-width:0; }
+  .update-row small { color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; }
+  .world-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .world-head h2 { margin:0; }
+  .world-head p { margin:4px 0 0; }
+  .world-list { overflow:hidden; }
+  .world-row { display:flex; align-items:center; gap:9px; padding:12px; border-bottom:1px solid var(--outline-variant); }
+  .world-row:last-child { border-bottom:0; }
+  .world-mark { width:42px;height:42px;display:grid;place-items:center;border-radius:15px;background:var(--primary-container);color:var(--on-primary-container);flex:none; }
+  .world-name { display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
+  .world-name b { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .world-name small { color:var(--text-dim); }
+  .world-name input { flex:1;min-width:0; }
+  .world-empty { display:grid;justify-items:center;gap:8px;padding:38px;color:var(--text-dim);text-align:center; }
+  .profile-editor { margin-top:24px;padding-top:20px;border-top:1px solid var(--outline-variant); }
+  .profile-editor h3 { margin:0 0 4px; }
+  .profile-editor>p { margin-bottom:14px; }
+  .profile-add,.profile-row { display:flex;align-items:center;gap:8px;margin:8px 0; }
+  .profile-add .input,.profile-row>.input { flex:1;min-width:100px; }
+  .profile-row .select { flex:1;min-width:100px; }
+  .profile-row label { display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim); }
+  .profile-row .ram { width:85px; }
 
   .modrinth-search { padding: 16px; margin-bottom: 12px; }
   .modrinth-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
@@ -451,4 +557,5 @@
   .brow span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
   .danger-zone { margin-top: 14px; padding-top: 18px; }
   @media (max-width: 600px) { .search-result { align-items: flex-start; } .mod-actions { flex-direction: column; } .mr-badge { display: none; } }
+  @media (max-width: 760px) { .actions{grid-template-columns:1fr 1fr}.play{grid-column:1/-1}.world-row{flex-wrap:wrap}.world-name{min-width:calc(100% - 54px)}.world-name small{display:none}.profile-row{flex-wrap:wrap}.profile-row>.input,.profile-row .select{flex-basis:35%} }
 </style>

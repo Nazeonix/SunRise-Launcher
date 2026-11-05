@@ -10,6 +10,7 @@ export const app = $state({
   info: { root: '', version: '', instancesDir: '' },
   instances: [],
   selectedId: null,
+  instanceTab: 'overview',
   deleteInstanceId: null,
   versions: [],
   javas: [],
@@ -50,7 +51,7 @@ export async function init() {
     applyTheme(app.settings.theme, app.settings.mode, app.systemDark);
     app.info = await api.info();
     app.instances = await api.instances();
-    app.selectedId = app.instances[0]?.id ?? null;
+    app.selectedId = null;
     await refreshAccounts();
     app.gpus = await api.gpus();
   } catch (e) {
@@ -115,7 +116,7 @@ export async function refreshInstances() {
   try {
     app.instances = await api.instances();
     if (app.selectedId !== null && !app.instances.some((i) => i.id === app.selectedId)) {
-      app.selectedId = app.instances[0]?.id ?? null;
+      app.selectedId = null;
     }
   } catch (e) {
     toast(e);
@@ -124,6 +125,7 @@ export async function refreshInstances() {
 
 export function selectInstance(id) {
   app.selectedId = id;
+  app.instanceTab = 'overview';
 }
 
 export async function saveSettings(patch) {
@@ -153,11 +155,11 @@ export async function deleteInstance(id, deleteFiles) {
   await refreshInstances();
 }
 
-export async function play(id) {
+export async function play(id, profile = null) {
   app.game[id] = { state: 'installing', message: '', needJava: null };
   app.progress[id] = { text: 'Starting…', fraction: 0 };
   try {
-    await api.play(id);
+    await api.play(id, profile);
   } catch (e) {
     app.game[id] = { state: 'error', message: String(e), needJava: null };
     toast(e);

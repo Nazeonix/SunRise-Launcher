@@ -291,8 +291,15 @@ pub fn gpu_info() -> Vec<Gpu> {
 // ───────────────────────── play / stop ─────────────────────────
 
 #[tauri::command]
-pub async fn play(app: AppHandle, state: State<'_, AppState>, id: i64) -> Result<(), String> {
-    let inst = state.db.instance(id).map_err(err)?;
+pub async fn play(app: AppHandle, state: State<'_, AppState>, id: i64, profile: Option<crate::db::LaunchProfile>) -> Result<(), String> {
+    let mut inst = state.db.instance(id).map_err(err)?;
+    if let Some(profile) = profile {
+        if !inst.launch_profiles.iter().any(|p| p.name == profile.name && p.java_path == profile.java_path && p.ram_mb == profile.ram_mb) {
+            return Err("That launch profile is no longer available. Refresh and try again.".into());
+        }
+        inst.java_path = profile.java_path;
+        inst.ram_mb = profile.ram_mb;
+    }
     let (tx, rx) = oneshot::channel::<()>();
     {
         let mut run = state.running.lock().unwrap();
@@ -661,6 +668,83 @@ pub fn delete_mod(state: State<'_, AppState>, id: i64, name: String) -> Result<(
     let name = safe_name(&name)?;
     let path: &Path = &mods_dir(&state, id)?.join(name);
     std::fs::remove_file(path).map_err(err)
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldEntry { name: String, path: String }
+
+fn saves_dir(state: &AppState, id: i64) -> Result<PathBuf, String> {
+    Ok(inst_dir(state, id)?.join("saves"))
+}
+
+fn world_path(state: &AppState, id: i64, name: &str) -> Result<PathBuf, String> {
+    let name = safe_name(name)?;
+    let path = saves_dir(state, id)?.join(name);
+    if !std::fs::symlink_metadata(&path).map(|m| m.file_type().is_dir()).unwrap_or(false) { return Err("World folder not found".into()); }
+    Ok(path)
+}
+
+fn ensure_stopped(state: &AppState, id: i64) -> Result<(), String> {
+    if state.running.lock().unwrap().contains_key(&id) { Err("Stop Minecraft before managing worlds".into()) } else { Ok(()) }
+}
+
+#[tauri::command]
+pub fn list_worlds(state: State<'_, AppState>, id: i64) -> Result<Vec<WorldEntry>, String> {
+    let saves = saves_dir(&state, id)?;
+    let mut worlds = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(saves) {
+        for entry in entries.flatten() {
+            if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                let name = entry.file_name().to_string_lossy().to_string();
+                worlds.push(WorldEntry { path: entry.path().to_string_lossy().to_string(), name });
+            }
+        }
+    }
+    worlds.sort_by(|a,b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    Ok(worlds)
+}
+
+#[tauri::command]
+pub fn rename_world(state: State<'_, AppState>, id: i64, name: String, new_name: String) -> Result<(), String> {
+    ensure_stopped(&state, id)?;
+    let old = world_path(&state, id, &name)?;
+    let clean = new_name.trim();
+    if clean.is_empty() || clean == "." || clean == ".." || clean.contains('/') || clean.contains('\\') { return Err("Choose a valid world name".into()); }
+    let target = old.parent().ok_or("Invalid world folder")?.join(clean);
+    if target.exists() { return Err("A world with that name already exists".into()); }
+    std::fs::rename(old, target).map_err(err)
+}
+
+fn copy_tree(from: &Path, to: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(to)?;
+    for item in std::fs::read_dir(from)? {
+        let item = item?;
+        let target = to.join(item.file_name());
+        if item.file_type()?.is_dir() { copy_tree(&item.path(), &target)?; }
+        else if item.file_type()?.is_file() { std::fs::copy(item.path(), target)?; }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn backup_world(state: State<'_, AppState>, id: i64, name: String) -> Result<String, String> {
+    ensure_stopped(&state, id)?;
+    let source = world_path(&state, id, &name)?;
+    let backups = inst_dir(&state, id)?.join("world-backups");
+    std::fs::create_dir_all(&backups).map_err(err)?;
+    let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(err)?.as_secs();
+    let mut target = backups.join(format!("{name}-{stamp}"));
+    let mut count = 2;
+    while target.exists() { target = backups.join(format!("{name}-{stamp}-{count}")); count += 1; }
+    copy_tree(&source, &target).map_err(err)?;
+    Ok(target.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub fn open_world(app: AppHandle, state: State<'_, AppState>, id: i64, name: String) -> Result<(), String> {
+    let path = world_path(&state, id, &name)?;
+    app.opener().open_path(path.to_string_lossy().to_string(), None::<&str>).map_err(err)
 }
 
 /// Native folder picker. Runs on a blocking thread (the dialog must not block the UI thread).

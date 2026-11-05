@@ -18,7 +18,8 @@ A simple Minecraft launcher with an **instances sidebar**.
 - **Instances** – every instance has its own Minecraft version, mod loader, Java, memory, colour,
   mods, worlds and logs (`~/.local/share/Sunrise/instances/<id>/`). Sidebar with search, running indicator, “New instance”.
 - **Vanilla, Fabric, Forge, NeoForge** (the launcher defaults to each loader's recommended/stable build for the selected Minecraft version; exact builds can be pinned).
-- Instance tabs: **Overview · Mods** (enable/disable/delete) **· Logs** (live tail) **· Settings**.
+- Material-styled **Home** launch panel with instance/profile selection and quick links; instance tabs include **Overview · Mods** (enable/disable/delete and safe Modrinth updates) **· Worlds** (browse, rename, back up, open) **· Resource Packs · Logs · Settings**.
+- Saved launch profiles with alternate per-instance Java and memory settings.
 - Java detection (25 / 21 / 17 / 11 / 8 …) with per-instance override, manual paths and Adoptium download links.
 - Linux **dedicated-GPU (PRIME) offload** for the game process.
 - 8 Material You colour schemes, procedural pixel-art banner, wavy progress, cookie/clover shapes.

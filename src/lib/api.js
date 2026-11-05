@@ -18,7 +18,7 @@ export const api = {
   addJava: (path) => invoke('add_custom_java', { path }),
   gpus: () => invoke('gpu_info'),
 
-  play: (id) => invoke('play', { id }),
+  play: (id, profile = null) => invoke('play', { id, profile }),
   stop: (id) => invoke('stop', { id }),
 
   accounts: () => invoke('account_status'),
@@ -43,6 +43,12 @@ export const api = {
   mods: (id) => invoke('list_mods', { id }),
   toggleMod: (id, name) => invoke('toggle_mod', { id, name }),
   deleteMod: (id, name) => invoke('delete_mod', { id, name }),
+  checkModUpdates: (id) => invoke('check_mod_updates', { id }),
+  updateMod: (id, currentName, projectId) => invoke('update_mod', { id, currentName, projectId }),
+  worlds: (id) => invoke('list_worlds', { id }),
+  renameWorld: (id, name, newName) => invoke('rename_world', { id, name, newName }),
+  backupWorld: (id, name) => invoke('backup_world', { id, name }),
+  openWorld: (id, name) => invoke('open_world', { id, name }),
   searchMods: (id, query) => invoke('search_modrinth_mods', { id, query }),
   installMod: (id, projectId) => invoke('install_modrinth_mod', { id, projectId }),
   searchResourcePacks: (id, query) => invoke('search_modrinth_resourcepacks', { id, query }),

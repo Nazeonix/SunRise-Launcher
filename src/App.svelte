@@ -10,7 +10,7 @@
   import DeleteInstanceDialog from './lib/DeleteInstanceDialog.svelte';
   import ModpackBrowser from './lib/ModpackBrowser.svelte';
   import MusicPlayer from './lib/MusicPlayer.svelte';
-  import { clover } from './lib/shapes.js';
+  import HomeLaunch from './lib/HomeLaunch.svelte';
 
   const selected = $derived(app.instances.find((i) => i.id === app.selectedId));
 
@@ -30,12 +30,7 @@
         <InstanceView instance={selected} />
       {/key}
     {:else}
-      <div class="center empty">
-        <div class="blob" style:clip-path={clover()}></div>
-        <h2>No instances yet</h2>
-        <p class="hint">An instance is a separate Minecraft setup: its own version, mod loader, mods and worlds.</p>
-        <button class="btn primary" onclick={() => (app.dialog = 'new')}>Create your first instance</button>
-      </div>
+      <HomeLaunch />
     {/if}
   </main>
 
@@ -53,5 +48,4 @@
   main { overflow-y: auto; padding: 22px 28px 28px; }
   .center { height: 100%; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; max-width: 420px; margin: 0 auto; }
   .big { width: 34px; height: 34px; color: var(--primary); }
-  .blob { width: 96px; height: 96px; background: var(--primary-container); margin-bottom: 8px; }
 </style>

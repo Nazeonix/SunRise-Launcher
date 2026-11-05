@@ -98,6 +98,8 @@ pub fn run() {
             modpacks::import_modpack_file,
             modrinth_mods::search_modrinth_mods,
             modrinth_mods::install_modrinth_mod,
+            modrinth_mods::check_mod_updates,
+            modrinth_mods::update_mod,
             modrinth_mods::search_modrinth_resourcepacks,
             modrinth_mods::install_modrinth_resourcepack,
             modrinth_mods::list_resource_packs,
@@ -106,6 +108,10 @@ pub fn run() {
             commands::list_mods,
             commands::toggle_mod,
             commands::delete_mod,
+            commands::list_worlds,
+            commands::rename_world,
+            commands::backup_world,
+            commands::open_world,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Sunrise");
